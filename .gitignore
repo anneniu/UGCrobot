@@ -1,0 +1,7 @@
+*/**/*.iml
+*/**/*.xml
+*/**/*.class
+*/**/*.cache
+*/**/target/*
+*/**/project/target/*
+*/**/.idea/*
