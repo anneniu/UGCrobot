@@ -1,3 +1,5 @@
+mainClass in (Compile, packageBin) := Some("com.kunyan.dispatcher.scheduler.Scheduler")
+
 name := "dispatcher"
 
 version := "1.0"
@@ -14,8 +16,15 @@ libraryDependencies += "org.apache.spark" % "spark-streaming-kafka_2.10" % "1.5.
 
 libraryDependencies += "org.json" % "json" % "20140107"
 
-assemblyMergeStrategy in assembly := {
+libraryDependencies += "org.apache.hbase" % "hbase-server" % "1.1.2"
 
+libraryDependencies += "org.apache.hbase" % "hbase-client" % "1.1.2"
+
+libraryDependencies += "org.apache.hbase" % "hbase-common" % "1.1.2"
+
+libraryDependencies += "org.jsoup" % "jsoup" % "1.8.3"
+
+assemblyMergeStrategy in assembly := {
   case PathList("javax", "servlet", xs @ _*) => MergeStrategy.last
   case PathList("javax", "activation", xs @ _*) => MergeStrategy.last
   case PathList("javax", "el", xs @ _*) => MergeStrategy.last

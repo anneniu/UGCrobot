@@ -1,14 +1,18 @@
 package com.kunyan.dispatcher.config
 
-import java.util
 import java.util.Properties
 
 import kafka.producer.{KeyedMessage, Producer, ProducerConfig}
+import org.apache.hadoop.hbase.client.{Connection, ConnectionFactory}
+import org.apache.hadoop.hbase.{HBaseConfiguration, TableName}
 
 /**
   * Created by yangshuai on 2016/3/9.
   */
-class LazyConnections(createProducer: () => Producer[String, String]) extends Serializable {
+class LazyConnections(createHbaseConnection: () => Connection,
+                      createProducer: () => Producer[String, String]) extends Serializable {
+
+  lazy val connection = createHbaseConnection()
 
   lazy val producer = createProducer()
 
@@ -24,16 +28,46 @@ class LazyConnections(createProducer: () => Producer[String, String]) extends Se
     }
   }
 
+  def sendTask(topic: String, values: Seq[String]): Unit = {
+
+    val messages = values.map(x => new KeyedMessage[String, String](topic, x))
+
+    try {
+      producer.send(messages: _*)
+    } catch {
+      case e: Exception =>
+        e.printStackTrace()
+    }
+  }
+
+  def getAdmin = connection.getAdmin
+
+  def getTable(tableName: String) = connection.getTable(TableName.valueOf(tableName))
+
 }
 
 object LazyConnections {
 
   def apply(configFilePath: String): LazyConnections = {
 
+    val createHbaseConnection = () => {
+
+      val hbaseConf = HBaseConfiguration.create
+      hbaseConf.set("hbase.rootdir", "hdfs://master:9000/hbase")
+      hbaseConf.set("hbase.zookeeper.quorum", "master,slave1,slave2")
+
+      val connection = ConnectionFactory.createConnection(hbaseConf)
+      sys.addShutdownHook {
+        connection.close()
+      }
+
+      connection
+    }
+
     val createProducer = () => {
 
       val props = new Properties()
-      props.put("metadata.broker.list", "222.73.57.12:9092")
+      props.put("metadata.broker.list", "master:9092")
       props.put("serializer.class", "kafka.serializer.StringEncoder")
       props.put("producer.type", "async")
 
@@ -45,7 +79,7 @@ object LazyConnections {
       producer
     }
 
-    new LazyConnections(createProducer)
+    new LazyConnections(createHbaseConnection, createProducer)
   }
 
 }
