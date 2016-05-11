@@ -71,17 +71,25 @@ object BaiduParser {
     Jsoup.parse(html, "UTF-8").title()
   }
 
-  def getUserInfo(html: String): (String, String, String) = {
+  def getUserInfo(html: String): (String, String, String, String) = {
 
     val doc = Jsoup.parse(html, "UTF-8")
     val title = doc.title
-
     try {
+
+      var pid = ""
       var barName = title.split("_")(1)
       barName = barName.substring(0, barName.length - 1)
       val fid = html.split("fid: '")(1).split("'")(0)
       val tbs = html.split("tbs:'")(1).split("',")(0)
-      (barName, fid, tbs)
+      val text = doc.select("cc div").get(1).toString
+
+      if (text.nonEmpty) {
+        pid = text.split("content_")(1).split("\"")(0)
+      }
+
+      (barName, fid, tbs, pid)
+
     } catch {
       case e: Exception =>
         e.printStackTrace()

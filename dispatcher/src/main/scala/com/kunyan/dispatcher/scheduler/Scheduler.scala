@@ -75,10 +75,8 @@ object Scheduler {
 
             if (tuple != null) {
 
-              val jsonStr = getCommentJsonString(originUrl, tuple, "0")
-              println(jsonStr)
-              lazyConnBr.value.sendTask("robot_tiebacomment", jsonStr)
-              lazyConnBr.value.sendTask("robot_tiebacomment", getCommentJsonString(originUrl, tuple, "1"))
+              lazyConnBr.value.sendTask("robot_tiebacomment", getCommentJsonString(originUrl, tuple))
+              lazyConnBr.value.sendTask("robot_tiebacomment", getCommentJsonString(originUrl, (tuple._1, tuple._2, tuple._3, "")))
 
             }
           }
@@ -111,13 +109,12 @@ object Scheduler {
     *
     * @param url 回帖地址
     * @param tuple 回帖所需参数
-    * @param floor 回帖楼层
     * @return
     */
-  def getCommentJsonString(url: String, tuple: (String, String, String), floor: String): String = {
+  def getCommentJsonString(url: String, tuple: (String, String, String, String)): String = {
 
-    val json = "{\"plat_id\":%d, \"preUrl\":\"%s\", \"kw\":\"%s\", \"fid\":\"%s\", \"tbs\":\"%s\", \"floor_num\":\"%s\", \"repostid\":\"\", \"timestamp\":\"%s\"}"
-    json.format(Platform.Tieba.id, url, tuple._1, tuple._2, tuple._3, floor, new Date().getTime.toString)
+    val json = "{\"plat_id\":%d, \"preUrl\":\"%s\", \"kw\":\"%s\", \"fid\":\"%s\", \"tbs\":\"%s\", \"repostid\":\"%s\", \"timestamp\":\"%s\"}"
+    json.format(Platform.Tieba.id, url, tuple._1, tuple._2, tuple._3, tuple._4, new Date().getTime.toString)
 
   }
 
