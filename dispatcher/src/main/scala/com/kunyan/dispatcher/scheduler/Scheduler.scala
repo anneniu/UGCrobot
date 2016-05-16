@@ -93,12 +93,17 @@ object Scheduler {
       messages.foreach {
         x => {
 
-          val id = x.split("|||")(0)
-          val title = x.split("|||")(1)
-          if (id.nonEmpty && title.nonEmpty) {
+          println(x)
+
+          val id = x._1
+          val title = x._2
+
+          println(id)
+          println(title)
+
+          if (id.nonEmpty && title.nonEmpty)
             lazyConnBr.value.sendTask("robot_tiebacomment", getCommentJsonString(id, title))
 
-          }
         }
       }
 
@@ -176,7 +181,9 @@ object Scheduler {
 
     val json = "{\"plat_id\":%d, \"id\":\"%s\", \"title\":\"%s\", \"timestamp\":\"%s\"}"
 
-    json.format(Platform.Taoguba.id, id, title, new Date().getTime.toString)
+    val result = json.format(Platform.Taoguba.id, id, title, new Date().getTime.toString)
+    println(result)
+    result
   }
 
   /**

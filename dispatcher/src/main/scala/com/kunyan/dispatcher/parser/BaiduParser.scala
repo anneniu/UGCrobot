@@ -31,10 +31,8 @@ object BaiduParser {
 
     val map = mutable.Map[Int, Element]()
 
-    var doc = Jsoup.parse(html, "UTF-8")
+    val doc = Jsoup.parse(html, "UTF-8")
 
-    val comment = doc.getElementById("pagelet_html_frs-list/pagelet/thread_list").toString.replaceAll("<!--", "").replace("-->", "")
-    doc = Jsoup.parse(comment, "UTF-8")
     val tags = doc.getElementById("thread_list").getElementsByAttributeValue("class", " j_thread_list clearfix")
 
     for (i <- 0 until tags.size()) {
