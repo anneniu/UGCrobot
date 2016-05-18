@@ -24,6 +24,8 @@ libraryDependencies += "org.apache.hbase" % "hbase-common" % "1.1.2"
 
 libraryDependencies += "org.jsoup" % "jsoup" % "1.8.3"
 
+libraryDependencies += "com.ibm.icu" % "icu4j" % "56.1"
+
 assemblyMergeStrategy in assembly := {
   case PathList("javax", "servlet", xs @ _*) => MergeStrategy.last
   case PathList("javax", "activation", xs @ _*) => MergeStrategy.last

@@ -6,6 +6,7 @@ import java.util.Date
 import _root_.kafka.serializer.StringDecoder
 import com.kunyan.dispatcher.config.{LazyConnections, Platform}
 import com.kunyan.dispatcher.parser.{BaiduParser, TaogubaParser}
+import com.kunyan.dispatcher.util.DateUtil
 import org.apache.hadoop.hbase.client.Get
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.log4j.{Level, LogManager}
@@ -34,7 +35,7 @@ object Scheduler {
     val kafkaParams = Map[String, String]("metadata.broker.list" -> "master:9092",
       "group.id" -> "robot")
 
-    val lazyConnBr = ssc.sparkContext.broadcast(LazyConnections(""))
+    val lazyConnBr = ssc.sparkContext.broadcast(LazyConnections(args(0)))
 
     val messages = KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](
       ssc, kafkaParams, Set("robot_stockresult"))
@@ -86,19 +87,20 @@ object Scheduler {
     * @param html hbase中取出的html
     */
   def parseTaoguba(lazyConnBr: Broadcast[LazyConnections], originUrl: String, html: String): Unit = {
+
     if (originUrl.startsWith("http://www.taoguba.com.cn")) {
 
       val messages = TaogubaParser.parse(html)
-      println(messages)
+
       messages.foreach {
         x => {
 
-          val id = x.split("|||")(0)
-          val title = x.split("|||")(1)
-          if (id.nonEmpty && title.nonEmpty) {
+          val id = x._1
+          val title = x._2
+
+          if (id.nonEmpty && title.nonEmpty)
             lazyConnBr.value.sendTask("robot_tiebacomment", getCommentJsonString(id, title))
 
-          }
         }
       }
 
@@ -122,7 +124,6 @@ object Scheduler {
     } else if (originUrl.startsWith("http://tieba.baidu.com/f?kw=")) {
 
       val messages = BaiduParser.getHotPosts(html).map(getUrlJsonString)
-      println(messages)
       lazyConnBr.value.sendTask("robot_stock", messages.toSeq)
 
     } else if (originUrl.startsWith("http://tieba.baidu.com/p/")) {
@@ -148,7 +149,7 @@ object Scheduler {
 
     val json = "{\"id\":\"\", \"attrid\":\"%d\", \"cookie\":\"\", \"referer\":\"\", \"url\":\"%s\", \"timestamp\":\"%s\"}"
 
-    json.format(Platform.Tieba.id, url, new Date().getTime.toString)
+    json.format(Platform.Tieba.id, url, DateUtil.getDateString)
   }
 
   /**
@@ -162,7 +163,7 @@ object Scheduler {
 
     val json = "{\"plat_id\":%d, \"preUrl\":\"%s\", \"kw\":\"%s\", \"fid\":\"%s\", \"tbs\":\"%s\", \"repostid\":\"%s\", \"timestamp\":\"%s\"}"
 
-    json.format(Platform.Tieba.id, url, tuple._1, tuple._2, tuple._3, tuple._4, new Date().getTime.toString)
+    json.format(Platform.Tieba.id, url, tuple._1, tuple._2, tuple._3, tuple._4, DateUtil.getDateString)
   }
 
   /**
@@ -176,7 +177,9 @@ object Scheduler {
 
     val json = "{\"plat_id\":%d, \"id\":\"%s\", \"title\":\"%s\", \"timestamp\":\"%s\"}"
 
-    json.format(Platform.Taoguba.id, id, title, new Date().getTime.toString)
+    val result = json.format(Platform.Taoguba.id, id, title, DateUtil.getDateString)
+//    println(result)
+    result
   }
 
   /**

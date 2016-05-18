@@ -15,13 +15,14 @@ object TaogubaParser {
     * @param html 要解析的页面信息字符串
     * @return 返回排名前五的帖子的id和title信息集合
     */
-  def parse(html: String): ListBuffer[String] = {
+  def parse(html: String): ListBuffer[(String, String)] = {
 
-    var idTitle = ListBuffer[String]()
+    var idTitle = ListBuffer[(String, String)]()
     val doc = Jsoup.parse(html, "UTF-8")
     val map = collection.mutable.Map[String, String]()
 
     try {
+
       val list = doc.select("div.p_list01 li.pcdj02")
 
       for (i <- 0 until list.size) {
@@ -47,8 +48,8 @@ object TaogubaParser {
         val children = list.get(result(j).toInt)
         val title = children.select("a").text()
         val id = children.select("a").attr("href").split("/")(1)
-        idTitle = idTitle ++ ListBuffer(id + "|||" + title)
 
+        idTitle += (id -> title)
       }
 
       idTitle
