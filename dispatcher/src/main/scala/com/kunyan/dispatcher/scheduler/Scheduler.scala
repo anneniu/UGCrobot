@@ -1,11 +1,8 @@
 package com.kunyan.dispatcher.scheduler
 
-
-import java.util.Date
-
 import _root_.kafka.serializer.StringDecoder
 import com.kunyan.dispatcher.config.{LazyConnections, Platform}
-import com.kunyan.dispatcher.parser.{BaiduParser, TaogubaParser}
+import com.kunyan.dispatcher.parser.{SnowballParser, BaiduParser, TaogubaParser}
 import com.kunyan.dispatcher.util.DateUtil
 import org.apache.hadoop.hbase.client.Get
 import org.apache.hadoop.hbase.util.Bytes
@@ -64,6 +61,8 @@ object Scheduler {
             parseTieba(lazyConnBr, originUrl, html)
           } else if (attrId.toInt == Platform.Taoguba.id) {
             parseTaoguba(lazyConnBr, originUrl, html)
+          } else if (attrId.toInt == Platform.Snowball.id) {
+            parseSnowball(lazyConnBr, originUrl, html)
           }
 
         } catch {
@@ -83,8 +82,8 @@ object Scheduler {
     * 处理淘股吧消息
     *
     * @param lazyConnBr 连接容器
-    * @param originUrl hbase中取出的url
-    * @param html hbase中取出的html
+    * @param originUrl  hbase中取出的url
+    * @param html       hbase中取出的html
     */
   def parseTaoguba(lazyConnBr: Broadcast[LazyConnections], originUrl: String, html: String): Unit = {
 
@@ -111,8 +110,8 @@ object Scheduler {
     * 处理百度贴吧消息
     *
     * @param lazyConnBr 连接容器
-    * @param originUrl hbase中取出的url
-    * @param html hbase中取出的html
+    * @param originUrl  hbase中取出的url
+    * @param html       hbase中取出的html
     */
   def parseTieba(lazyConnBr: Broadcast[LazyConnections], originUrl: String, html: String): Unit = {
 
@@ -137,6 +136,46 @@ object Scheduler {
 
       }
     }
+  }
+
+  /**
+    * 处理雪球网消息
+    *
+    * @param lazyConnBr 连接容器
+    * @param originUrl  hbase中取出的url
+    * @param html       hbase中取出的html
+    */
+  def parseSnowball(lazyConnBr: Broadcast[LazyConnections], originUrl: String, html: String) = {
+
+    if (originUrl.startsWith(" https://xueqiu.com/today/cn") || originUrl.startsWith("https://xueqiu.com/today/lc")) {
+
+      val messages = SnowballParser.parse(html)
+
+      messages.foreach {
+        x => {
+          if (x.nonEmpty) {
+            lazyConnBr.value.sendTask("robot_tiebacomment", getSnowBallJsonString(x))
+          }
+        }
+      }
+
+    } else if (originUrl.startsWith("https://xueqiu.com/today/hots/news")) {
+
+      val sendUrl = "https://xueqiu.com/statuses/hots.json?a=1&count=20&type=notice&page=1&meigu=0&page=1&scope=day"
+      lazyConnBr.value.sendTask("robot_stock", sendUrl)
+
+    } else if (originUrl.startsWith("https://xueqiu.com/statuses/hots.json?")) {
+
+      val messages = SnowballParser.parseHots(html)
+
+      messages.foreach {
+        x => {
+          if (x.nonEmpty)
+            lazyConnBr.value.sendTask("robot_tiebacomment", getSnowBallJsonString(x))
+        }
+      }
+    }
+
   }
 
   /**
@@ -169,7 +208,7 @@ object Scheduler {
   /**
     * 拼接淘股吧回帖json
     *
-    * @param id 帖子id
+    * @param id    帖子id
     * @param title 帖子标题
     * @return json格式的消息的字符串
     */
@@ -178,9 +217,26 @@ object Scheduler {
     val json = "{\"plat_id\":%d, \"id\":\"%s\", \"title\":\"%s\", \"timestamp\":\"%s\"}"
 
     val result = json.format(Platform.Taoguba.id, id, title, DateUtil.getDateString)
-//    println(result)
+    //    println(result)
     result
   }
+
+  /**
+    * 拼接雪球回帖json
+    *
+    * @param url 话题的url
+    * @return json格式的消息的字符串
+    */
+  def getSnowBallJsonString(url: String): String = {
+
+    val json = "{\"plat_id\":%d,  \"url\":\"%s\", \"topicId\":\"%s\",\"timestamp\":\"%s\"}"
+
+    val result = json.format(Platform.Snowball.id, url, "", DateUtil.getDateString)
+
+    result
+
+  }
+
 
   /**
     * 从json字符串中解析数据
@@ -212,8 +268,8 @@ object Scheduler {
     * 根据表名和rowkey从hbase中获取数据
     *
     * @param tableName 表名
-    * @param rowkey 索引
-    * @param lazyConn 连接容器
+    * @param rowkey    索引
+    * @param lazyConn  连接容器
     * @return (url, html)
     */
   def getHtml(tableName: String, rowkey: String, lazyConn: LazyConnections): (String, String) = {
