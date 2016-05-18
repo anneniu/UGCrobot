@@ -2,6 +2,7 @@ package com.kunyan.dispatcher.parser
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
+import org.jsoup.select.Elements
 
 import scala.collection.mutable
 
@@ -33,11 +34,21 @@ object BaiduParser {
 
     val doc = Jsoup.parse(html, "UTF-8")
 
-    val tags = doc.getElementById("thread_list").getElementsByAttributeValue("class", " j_thread_list clearfix")
+    var tags: Elements = null
+
+    try {
+      tags = doc.getElementById("thread_list").getElementsByAttributeValue("class", " j_thread_list clearfix")
+    } catch {
+      case e: NullPointerException =>
+        tags = Jsoup.parse(doc.getElementById("pagelet_html_frs-list/pagelet/thread_list").toString.split("<!--")(1).split("-->")(0).trim()).getElementById("thread_list").getElementsByAttributeValue("class", " j_thread_list clearfix")
+    }
 
     for (i <- 0 until tags.size()) {
+
       val iTag = tags.get(i)
+
       try {
+
         val readCount = StringToInt(iTag.getElementsByAttributeValue("class", "row").get(0).getElementsByTag("span").get(1).text)
         val commentCount = StringToInt(iTag.getElementsByAttributeValue("class", "row").get(1).getElementsByTag("span").get(1).text)
 
@@ -99,7 +110,7 @@ object BaiduParser {
   def StringToInt(text: String): Int = {
 
     if (text.contains("万")) {
-      text.replace("万", "").toInt * 10000
+      (text.replace("万", "").toFloat * 10000).toInt
     } else {
       text.toInt
     }
