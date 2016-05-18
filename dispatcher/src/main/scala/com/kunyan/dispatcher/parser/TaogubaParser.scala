@@ -22,6 +22,7 @@ object TaogubaParser {
     val map = collection.mutable.Map[String, String]()
 
     try {
+
       val list = doc.select("div.p_list01 li.pcdj02")
 
       for (i <- 0 until list.size) {
