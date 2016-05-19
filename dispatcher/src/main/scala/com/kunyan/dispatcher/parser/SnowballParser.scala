@@ -6,6 +6,7 @@ import scala.util.parsing.json.JSON
 
 /**
   * Created by niujiaojiao on 2016/5/18.
+  * 雪球网解析类
   */
 object SnowballParser {
 

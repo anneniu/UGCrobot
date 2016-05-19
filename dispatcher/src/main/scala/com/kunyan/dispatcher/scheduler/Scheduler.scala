@@ -26,7 +26,6 @@ object Scheduler {
       .setAppName("NewsParser")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .set("spark.kryoserializer.buffer.max", "2000")
-      .setMaster("local")
 
     val ssc = new StreamingContext(sparkConf, Seconds(1))
     val kafkaParams = Map[String, String]("metadata.broker.list" -> "master:9092",
@@ -42,8 +41,6 @@ object Scheduler {
     messages.foreachRDD(rdd => {
 
       rdd.foreach(x => {
-
-        println(x._2)
 
         val messageMap = parseJson(x._2)
 
@@ -147,7 +144,7 @@ object Scheduler {
     */
   def parseSnowball(lazyConnBr: Broadcast[LazyConnections], originUrl: String, html: String) = {
 
-    if (originUrl.startsWith(" https://xueqiu.com/today/cn") || originUrl.startsWith("https://xueqiu.com/today/lc")) {
+    if (originUrl.startsWith("https://xueqiu.com/today/cn") || originUrl.startsWith("https://xueqiu.com/today/lc")) {
 
       val messages = SnowballParser.parse(html)
 
@@ -161,18 +158,20 @@ object Scheduler {
 
     } else if (originUrl.startsWith("https://xueqiu.com/today/hots/news")) {
 
-      val sendUrl = "https://xueqiu.com/statuses/hots.json?a=1&count=20&type=notice&page=1&meigu=0&page=1&scope=day"
-      lazyConnBr.value.sendTask("robot_stock", sendUrl)
+      var sendUrl = "https://xueqiu.com/statuses/hots.json?a=1&count=20&type=notice&page=1&meigu=0&page=1&scope=day"
+      val messsages = getUrlJsonStringSnowball(sendUrl)
+      lazyConnBr.value.sendTask("robot_stock", messsages)
 
     } else if (originUrl.startsWith("https://xueqiu.com/statuses/hots.json?")) {
 
       val messages = SnowballParser.parseHots(html)
-
       messages.foreach {
+
         x => {
           if (x.nonEmpty)
             lazyConnBr.value.sendTask("robot_tiebacomment", getSnowBallJsonString(x))
         }
+
       }
     }
 
@@ -189,6 +188,19 @@ object Scheduler {
     val json = "{\"id\":\"\", \"attrid\":\"%d\", \"cookie\":\"\", \"referer\":\"\", \"url\":\"%s\", \"timestamp\":\"%s\"}"
 
     json.format(Platform.Tieba.id, url, DateUtil.getDateString)
+  }
+
+  /**
+    * 雪球拼接往robot_stock topic 发的消息的json字符串
+    *
+    * @param url 消息中的帖子的url
+    * @return json格式的消息的字符串
+    */
+  def getUrlJsonStringSnowball(url: String): String = {
+
+    val json = "{\"id\":\"\", \"attrid\":\"%d\", \"cookie\":\"\", \"referer\":\"\", \"url\":\"%s\", \"timestamp\":\"%s\"}"
+
+    json.format(Platform.Snowball.id, url, DateUtil.getDateString)
   }
 
   /**
@@ -217,7 +229,6 @@ object Scheduler {
     val json = "{\"plat_id\":%d, \"id\":\"%s\", \"title\":\"%s\", \"timestamp\":\"%s\"}"
 
     val result = json.format(Platform.Taoguba.id, id, title, DateUtil.getDateString)
-    //    println(result)
     result
   }
 
