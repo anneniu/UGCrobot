@@ -23,7 +23,7 @@ object Scheduler {
   def main(args: Array[String]): Unit = {
 
     val sparkConf = new SparkConf()
-      .setAppName("NewsParser")
+      .setAppName("ROBOT")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .set("spark.kryoserializer.buffer.max", "2000")
 
@@ -64,7 +64,7 @@ object Scheduler {
 
         } catch {
           case e: Exception =>
-            e.printStackTrace()
+            null
         }
 
       })
@@ -119,8 +119,14 @@ object Scheduler {
 
     } else if (originUrl.startsWith("http://tieba.baidu.com/f?kw=")) {
 
-      val messages = BaiduParser.getHotPosts(html).map(getUrlJsonString)
-      lazyConnBr.value.sendTask("robot_stock", messages.toSeq)
+      val messages = BaiduParser.getHotPosts(html)
+
+      if(messages.nonEmpty){
+        lazyConnBr.value.sendTask("robot_stock", messages.map(getUrlJsonString).toSeq)
+      }else {
+        println("THIS IS ERROR" + originUrl)
+      }
+
 
     } else if (originUrl.startsWith("http://tieba.baidu.com/p/")) {
 
