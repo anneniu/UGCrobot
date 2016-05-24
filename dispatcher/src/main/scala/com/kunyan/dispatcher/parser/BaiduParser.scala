@@ -53,14 +53,12 @@ object BaiduParser {
 
           val readCount = StringToInt(iTag.getElementsByAttributeValue("class", "row").get(0).getElementsByTag("span").get(1).text)
           val commentCount = StringToInt(iTag.getElementsByAttributeValue("class", "row").get(1).getElementsByTag("span").get(1).text)
-
           map.put(readCount + commentCount, iTag)
-        } catch {
 
+        } catch {
           case e: Exception =>
             val replyCount = StringToInt(iTag.getElementsByAttributeValue("class", "threadlist_rep_num center_text").get(0).text)
             map.put(replyCount, iTag)
-
         }
 
       }
@@ -84,6 +82,7 @@ object BaiduParser {
 
     val doc = Jsoup.parse(html, "UTF-8")
     val href = doc.getElementById("content").getElementsByClass("simple_block_container").first().firstElementSibling().firstElementSibling().getElementsByTag("a").attr("href")
+
     "http://tieba.baidu.com" + href
 
   }
@@ -102,17 +101,22 @@ object BaiduParser {
       var pid = ""
 
       if (title.contains("_")) {
+
         var barName = title.split("_")(1)
         barName = barName.substring(0, barName.length - 1)
         val fid = html.split("fid: '")(1).split("'")(0)
         val tbs = html.split("tbs:'")(1).split("',")(0)
 
         if (doc.select("cc div").size >= 2) {
+
           val text = doc.select("cc div").get(1).toString
 
           if (text.nonEmpty && text.contains("content_")) {
+
             pid = text.split("content_")(1).split("\"")(0)
+
             (barName, fid, tbs, pid)
+
           } else {
             null
           }
