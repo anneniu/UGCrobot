@@ -23,7 +23,7 @@ object Scheduler {
   def main(args: Array[String]): Unit = {
 
     val sparkConf = new SparkConf()
-      .setAppName("Robot")
+      .setAppName("ROBOT")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .set("spark.kryoserializer.buffer.max", "2000")
 
