@@ -135,8 +135,6 @@ object Scheduler {
       if (tuple != null) {
 
         lazyConnBr.value.sendTask("robot_tiebacomment", getCommentJsonString(originUrl, tuple))
-        lazyConnBr.value.sendTask("robot_tiebacomment", getCommentJsonString(originUrl, (tuple._1, tuple._2, tuple._3, "")))
-
       }
 
       val nameSet = BaiduParser.getName(html)
