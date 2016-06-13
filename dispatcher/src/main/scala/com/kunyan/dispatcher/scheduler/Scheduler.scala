@@ -175,7 +175,7 @@ object Scheduler {
 
     } else if (originUrl.startsWith("https://xueqiu.com/today/hots/news")) {
 
-      var sendUrl = "https://xueqiu.com/statuses/hots.json?a=1&count=20&type=notice&page=1&meigu=0&page=1&scope=day"
+      val sendUrl = "https://xueqiu.com/statuses/hots.json?a=1&count=20&type=notice&page=1&meigu=0&page=1&scope=day"
       val messsages = getUrlJsonStringSnowball(sendUrl)
       lazyConnBr.value.sendTask("robot_stock", messsages)
 
