@@ -142,7 +142,6 @@ object Scheduler {
       if (nameSet._2.nonEmpty) {
         nameSet._2.foreach(
           x => {
-            println(getNameJsonString(originUrl, x, nameSet._1))
             lazyConnBr.value.sendTask("robot_tiebacomment", getNameJsonString(originUrl, x, nameSet._1))
           }
         )
