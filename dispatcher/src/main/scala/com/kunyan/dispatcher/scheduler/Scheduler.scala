@@ -139,11 +139,11 @@ object Scheduler {
 
       val nameSet = BaiduParser.getName(html)
 
-      if (nameSet.nonEmpty) {
-        nameSet.foreach(
+      if (nameSet._2.nonEmpty) {
+        nameSet._2.foreach(
           x => {
-            println(getNameJsonString(originUrl, x))
-            lazyConnBr.value.sendTask("robot_tiebacomment", getNameJsonString(originUrl, x))
+            println(getNameJsonString(originUrl, x, nameSet._1))
+            lazyConnBr.value.sendTask("robot_tiebacomment", getNameJsonString(originUrl, x, nameSet._1))
           }
         )
       }
@@ -237,15 +237,16 @@ object Scheduler {
   /**
     * 拼接百度贴吧json
     *
-    * @param url  url地址
-    * @param name 用户名字
+    * @param url      url地址
+    * @param repostId 信息
+    * @param barName  吧名
     * @return json格式的消息的字符串
     */
-  def getNameJsonString(url: String, name: String): String = {
+  def getNameJsonString(url: String, repostId: String, barName: String): String = {
 
-    val json = "{\"plat_id\":%d, \"preUrl\":\"%s\", \"user_name\":\"%s\", \"timestamp\":\"%s\"}"
+    val json = "{\"plat_id\":%d, \"preUrl\":\"%s\", \"repostId\":\"%s\", \"barName\":\"%s\", \"timestamp\":\"%s\"}"
 
-    json.format(Platform.Tieba.id, url, name, DateUtil.getDateString)
+    json.format(Platform.Tieba.id, url, repostId, barName, DateUtil.getDateString)
   }
 
   /**
