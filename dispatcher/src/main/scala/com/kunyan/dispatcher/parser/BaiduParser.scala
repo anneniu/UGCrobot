@@ -164,7 +164,7 @@ object BaiduParser {
         barName = barName.substring(0, barName.length - 1)
 
       }
-      
+
       val list = doc.select("div#j_p_postlist  > div")
 
       for(i<- 0 until list.size){
