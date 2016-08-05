@@ -45,8 +45,8 @@ object SnowballParser {
 
         jsonInfo match {
 
-          case Some(mapInfo: List[Map[String, AnyVal]]) =>
-
+          case Some(map) =>
+            val mapInfo = map.asInstanceOf[List[Map[String, AnyVal]]]
             for (i <- mapInfo.indices) {
               val url = mapInfo(i).getOrElse("target", "")
               val total = "https://xueqiu.com" + url

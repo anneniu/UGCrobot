@@ -212,9 +212,9 @@ object Scheduler {
     */
   def getUrlJsonString(url: String): String = {
 
-    val json = "{\"id\":\"\", \"attrid\":\"%d\", \"cookie\":\"\", \"referer\":\"\", \"url\":\"%s\", \"timestamp\":\"%s\"}"
+    val json = "{\"id\":\"\", \"attrid\":\"%d\",\"method\":\"%d\"， \"cookie\":\"\", \"referer\":\"\", \"url\":\"%s\", \"timestamp\":\"%s\"}"
 
-    json.format(Platform.Tieba.id, url, DateUtil.getDateString)
+    json.format(Platform.Tieba.id, 2, url, DateUtil.getDateString)
   }
 
   /**
